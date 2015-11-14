@@ -19,6 +19,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using Microsoft.Kinect;
     using System.Net;
     using System.Drawing;
+    using System.Threading;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -34,6 +35,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Thickness of drawn joint lines
         /// </summary>
         private const double JointThickness = 3;
+
+        private const int MapDepthToByte = 8000 / 256;
+
 
         /// <summary>
         /// Thickness of clip edge rectangles
@@ -71,6 +75,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private readonly Brush inferredJointBrush = Brushes.Yellow;
 
         /// <summary>
+        /// Bitmap to display
+        /// </summary>
+        private WriteableBitmap depthBitmap = null;
+
+        /// <summary>
         /// Pen used for drawing bones that are currently inferred
         /// </summary>        
         private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
@@ -102,6 +111,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private ColorFrameReader colorFrameReader = null;
 
+        private DepthFrameReader depthFrameReader = null;
+
+        /// <summary>
+        /// Description of the data contained in the depth frame
+        /// </summary>
+        private FrameDescription depthFrameDescription = null;
+
         /// <summary>
         /// Array for the bodies
         /// </summary>
@@ -122,6 +138,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private int displayHeight;
 
+        private byte[] depthPixels = null;
+
         /// <summary>
         /// List of colors for each body tracked
         /// </summary>
@@ -135,6 +153,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         ///to ensure only one request is made at a time
         public bool requested = false;
 
+        public Thread thread;
+        public Thread thread2;
+        //public Thread thread3;
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -156,22 +177,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
 
+            // open the reader for the depth frames
+            this.depthFrameReader = this.kinectSensor.DepthFrameSource.OpenReader();
+
+            //for taking pictures
             this.colorFrameReader = this.kinectSensor.ColorFrameSource.OpenReader();
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
 
             // Torso
+            /*
             this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.Neck, JointType.SpineShoulder));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.SpineMid));
+            */
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineMid, JointType.SpineBase));
+            /*
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderRight));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipRight));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipLeft));
-
+            */
             // Right Arm
+            /*
             this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.ElbowRight));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.WristRight));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.HandRight));
@@ -194,7 +223,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
-
+            */
             // populate body colors, one for each BodyIndex
             this.bodyColors = new List<Pen>();
 
@@ -226,6 +255,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             // initialize the components (controls) of the window
             this.InitializeComponent();
+            thread = new Thread(new ThreadStart(WorkThreadFunction));
+            thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
+            //thread3 = new Thread(new ParameterizedThreadStart (WorkThreadFunction3));
+
         }
 
         /// <summary>
@@ -315,8 +348,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 if (colorFrame != null)
                 {
                     String bmp = colorFrame.ToString();
-                    //colorFrame.
-                    //Console.WriteLine(bmp);
                 }
             }
         }
@@ -347,28 +378,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     {
                         requested = true;
                         Console.WriteLine(this.bodies.Count(s => s.IsTracked));
-                        if (this.colorFrameReader != null)
+                        thread.Start();
+                        if (this.depthFrameDescription!= null)
                         {
-                            this.colorFrameReader.FrameArrived += this.Reader_FrameArrived;
+                            this.depthPixels = new byte[this.depthFrameDescription.Width * this.depthFrameDescription.Height];
                         }
-                        string url = "http://robok0p.azurewebsites.net/intruder";
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-
-                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                        if (response.StatusCode == HttpStatusCode.OK)
+                        if (this.depthFrameDescription != null)
                         {
-                            Console.WriteLine("\r\nResponse Status Code is OK and StatusDescription is: {0}",
-                               response.StatusDescription);
+                            this.depthBitmap = new WriteableBitmap(this.depthFrameDescription.Width, this.depthFrameDescription.Height, 96.0, 96.0, PixelFormats.Gray8, null);
                         }
-                        else
-                        {
-                            Console.WriteLine("\r\nResponse Status Code is NOT OK and StatusDescription is: {0}",
-                               response.StatusDescription);
-                        }
-                        // Releases the resources of the response.
                         
-                        Stream resStream = response.GetResponseStream();
-                        response.Close();
+
                     }
                     dataReceived = true;
                 }
@@ -404,7 +424,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 {
                                     position.Z = InferredZPositionClamp;
                                 }
-
+                                //thread3.Start(position);
+                                //thread3.Abort();
+                                Console.WriteLine("X: " + position.X);
+                                //Console.WriteLine("Y: " + position.Y);
+                                //gather 
+                                //Console.WriteLine("Z: " + position.Z);
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
@@ -422,6 +447,156 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
+        /*
+        public void WorkThreadFunction3(object position)
+        {
+            CameraSpacePoint temp = (CameraSpacePoint)position;
+            try
+            {
+                Console.WriteLine("X = " + temp.X);
+                Console.WriteLine("Y = " + temp.Y);
+                Console.WriteLine("Z = " + temp.Z);
+            }
+            catch (Exception ex)
+            {
+                // log errors
+            }
+        }
+        */
+
+        /// <summary>
+        /// Handles the depth frame data arriving from the sensor
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+        private void Reader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
+        {
+            bool depthFrameProcessed = false;
+            using (DepthFrame depthFrame = e.FrameReference.AcquireFrame())
+            {
+                if (depthFrame != null)
+                {
+                    // the fastest way to process the body index data is to directly access 
+                    // the underlying buffer
+                    using (Microsoft.Kinect.KinectBuffer depthBuffer = depthFrame.LockImageBuffer())
+                    {
+                        // verify data and write the color data to the display bitmap
+                        if (((this.depthFrameDescription.Width * this.depthFrameDescription.Height) == (depthBuffer.Size / this.depthFrameDescription.BytesPerPixel)))
+                        {
+                            // Note: In order to see the full range of depth (including the less reliable far field depth)
+                            // we are setting maxDepth to the extreme potential depth threshold
+                            ushort maxDepth = ushort.MaxValue;
+
+                            // If you wish to filter by reliable depth distance, uncomment the following line:
+                            maxDepth = depthFrame.DepthMaxReliableDistance;
+
+                            this.ProcessDepthFrameData(depthBuffer.UnderlyingBuffer, depthBuffer.Size, depthFrame.DepthMinReliableDistance, maxDepth);
+                            depthFrameProcessed = true;
+                        }
+                    }
+                }
+            }
+
+            if (depthFrameProcessed)
+            {
+                //thread2.Start();
+                
+            }
+        }
+        private void RenderDepthPixels()
+        {
+            this.depthBitmap.WritePixels(
+                new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
+                this.depthPixels,
+                this.depthBitmap.PixelWidth,
+                0);
+        }
+
+        public void WorkThreadFunction2()
+        {
+            try
+            {
+                this.RenderDepthPixels();
+
+            }
+            catch (Exception ex)
+            {
+                // log errors
+            }
+        }
+
+
+        /// <summary>
+        /// Directly accesses the underlying image buffer of the DepthFrame to 
+        /// create a displayable bitmap.
+        /// This function requires the /unsafe compiler option as we make use of direct
+        /// access to the native memory pointed to by the depthFrameData pointer.
+        /// </summary>
+        /// <param name="depthFrameData">Pointer to the DepthFrame image data</param>
+        /// <param name="depthFrameDataSize">Size of the DepthFrame image data</param>
+        /// <param name="minDepth">The minimum reliable depth value for the frame</param>
+        /// <param name="maxDepth">The maximum reliable depth value for the frame</param>
+        private unsafe void ProcessDepthFrameData(IntPtr depthFrameData, uint depthFrameDataSize, ushort minDepth, ushort maxDepth)
+        {
+            // depth frame data is a 16 bit value
+            ushort* frameData = (ushort*)depthFrameData;
+
+            // convert depth to a visual representation
+            for (int i = 0; i < (int)(depthFrameDataSize / this.depthFrameDescription.BytesPerPixel); ++i)
+            {
+                // Get the depth for this pixel
+                ushort depth = frameData[i];
+
+                // To convert to a byte, we're mapping the depth value to the byte range.
+                // Values outside the reliable depth range are mapped to 0 (black).
+                if (this.depthPixels != null)
+                {
+                    this.depthPixels[i] = (byte)(depth >= minDepth && depth <= maxDepth ? (depth / MapDepthToByte) : 0);
+                }
+                
+            }
+        }
+
+        
+        public void WorkThreadFunction()
+        {
+            try
+            {
+                if (this.colorFrameReader != null)
+                {
+                    this.colorFrameReader.FrameArrived += this.Reader_FrameArrived;
+                    this.depthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
+                }
+
+
+                if (this.depthFrameReader != null)
+                {
+                    this.depthFrameReader.FrameArrived += this.Reader_FrameArrived;
+                }
+                string url = "http://robok0p.azurewebsites.net/intruder";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    Console.WriteLine("\r\nResponse Status Code is OK and StatusDescription is: {0}",
+                       response.StatusDescription);
+                }
+                else
+                {
+                    Console.WriteLine("\r\nResponse Status Code is NOT OK and StatusDescription is: {0}",
+                       response.StatusDescription);
+                }
+                // Releases the resources of the response.
+
+                Stream resStream = response.GetResponseStream();
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                // log errors
+            }
+        }
         /// <summary>
         /// Draws a body
         /// </summary>
