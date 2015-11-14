@@ -18,6 +18,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Windows.Media.Imaging;
     using Microsoft.Kinect;
     using System.Net;
+    using System.Drawing;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -99,6 +100,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private BodyFrameReader bodyFrameReader = null;
 
+        private ColorFrameReader colorFrameReader = null;
+
         /// <summary>
         /// Array for the bodies
         /// </summary>
@@ -152,6 +155,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
+
+            this.colorFrameReader = this.kinectSensor.ColorFrameSource.OpenReader();
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -290,6 +295,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.bodyFrameReader.Dispose();
                 this.bodyFrameReader = null;
             }
+            if (this.colorFrameReader != null)
+            {
+                this.colorFrameReader.Dispose();
+                this.colorFrameReader = null;
+            }
 
             if (this.kinectSensor != null)
             {
@@ -298,6 +308,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
+        private void Reader_FrameArrived(object sender, ColorFrameArrivedEventArgs e)
+        {
+            using (ColorFrame colorFrame = e.FrameReference.AcquireFrame())
+            {
+                if (colorFrame != null)
+                {
+                    String bmp = colorFrame.ToString();
+                    //colorFrame.
+                    //Console.WriteLine(bmp);
+                }
+            }
+        }
         /// <summary>
         /// Handles the body frame data arriving from the sensor
         /// </summary>
@@ -325,6 +347,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     {
                         requested = true;
                         Console.WriteLine(this.bodies.Count(s => s.IsTracked));
+                        if (this.colorFrameReader != null)
+                        {
+                            this.colorFrameReader.FrameArrived += this.Reader_FrameArrived;
+                        }
                         string url = "http://robok0p.azurewebsites.net/intruder";
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
@@ -542,5 +568,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
+
     }
 }
