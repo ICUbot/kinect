@@ -1,0 +1,14 @@
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\bin\AnyCPU\Debug\BodyBasics-WPF.exe.config
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\bin\AnyCPU\Debug\BodyBasics-WPF.exe
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\bin\AnyCPU\Debug\BodyBasics-WPF.pdb
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\bin\AnyCPU\Debug\Microsoft.Kinect.dll
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\bin\AnyCPU\Debug\Microsoft.Kinect.xml
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\MainWindow.baml
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\MainWindow.g.cs
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\App.g.cs
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF_MarkupCompile.cache
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.g.resources
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\Microsoft.Samples.Kinect.BodyBasics.Properties.Resources.resources
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.csproj.GenerateResource.Cache
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.exe
+C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.pdb
