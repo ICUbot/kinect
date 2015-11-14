@@ -159,6 +159,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
+
+        public float[] xval;
+        public float[] zval;
+        public int counter = 0;
+
         public MainWindow()
         {
             // one sensor is currently supported
@@ -186,6 +191,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
 
+            this.xval = new float[5];
+            this.zval = new float[5];
             // Torso
             /*
             this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
@@ -426,10 +433,42 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 }
                                 //thread3.Start(position);
                                 //thread3.Abort();
-                                Console.WriteLine("X: " + position.X);
+                                //Console.WriteLine("X: " + position.X);
                                 //Console.WriteLine("Y: " + position.Y);
                                 //gather 
                                 //Console.WriteLine("Z: " + position.Z);
+                                if (counter % 5 != 0)
+                                {
+                                    xval[counter] = position.X;
+                                    zval[counter] = position.Z;
+                                    counter+=1;
+                                }
+                                else
+                                {
+                                    counter = 0;
+                                    float x = (xval.Sum())/5;
+                                    float z = (zval.Sum())/5;
+                                    string url = "http://192.168.1.15/move";
+                                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                                    httpWebRequest.ContentType = "text/json";
+                                    httpWebRequest.Method = "POST";
+
+                                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                                    {
+                                        string json = "{\"x\":\"" + x + "\"," +
+                                                      "\"z\":\"" + z + "\"}";
+
+                                        streamWriter.Write(json);
+                                        streamWriter.Flush();
+                                        streamWriter.Close();
+                                    }
+
+                                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                                    {
+                                        var result = streamReader.ReadToEnd();
+                                    }
+                                }
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
