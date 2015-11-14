@@ -17,6 +17,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using Microsoft.Kinect;
+    using System.Net;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -127,6 +128,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Current status text to display
         /// </summary>
         private string statusText = null;
+
+        ///to ensure only one request is made at a time
+        public bool requested = false;
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -316,7 +320,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     // As long as those body objects are not disposed and not set to null in the array,
                     // those body objects will be re-used.
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
-                    Console.WriteLine(this.bodies.Count(s => s.IsTracked));
+                    
+                    if (!requested && this.bodies.Count(s => s.IsTracked) > 0)
+                    {
+                        requested = true;
+                        Console.WriteLine(this.bodies.Count(s => s.IsTracked));
+                        string url = "http://robok0p.azurewebsites.net/intruder";
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            Console.WriteLine("\r\nResponse Status Code is OK and StatusDescription is: {0}",
+                               response.StatusDescription);
+                        }
+                        else
+                        {
+                            Console.WriteLine("\r\nResponse Status Code is NOT OK and StatusDescription is: {0}",
+                               response.StatusDescription);
+                        }
+                        // Releases the resources of the response.
+                        
+                        Stream resStream = response.GetResponseStream();
+                        response.Close();
+                    }
                     dataReceived = true;
                 }
             }

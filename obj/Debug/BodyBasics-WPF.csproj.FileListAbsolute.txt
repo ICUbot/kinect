@@ -12,3 +12,18 @@ C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\Microsoft.Samples.Ki
 C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.csproj.GenerateResource.Cache
 C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.exe
 C:\Users\Lisa\Documents\New folder\BodyBasics-WPF\obj\Debug\BodyBasics-WPF.pdb
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\BodyBasics-WPF.exe.config
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.exe
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.pdb
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\BodyBasics-WPF.exe
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\BodyBasics-WPF.pdb
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\Microsoft.Kinect.dll
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\Microsoft.Kinect.xml
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.csprojResolveAssemblyReference.cache
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\MainWindow.baml
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\MainWindow.g.cs
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\App.g.cs
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF_MarkupCompile.cache
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.g.resources
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\Microsoft.Samples.Kinect.BodyBasics.Properties.Resources.resources
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.csproj.GenerateResource.Cache
