@@ -10,7 +10,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Linq;
     using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Windows;
@@ -20,6 +19,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Net;
     using System.Drawing;
     using System.Threading;
+    using System.Windows.Threading;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -123,8 +123,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private int displayHeight;
 
-        private byte[] depthPixels = null;
-
         /// <summary>
         /// List of colors for each body tracked
         /// </summary>
@@ -151,6 +149,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public bool isFound = false;
 
+        /// <summary>
+        /// Reader for color frames
+        /// </summary>
+        private ColorFrameReader colorFrameReader = null;
+
+        /// <summary>
+        /// Bitmap to display
+        /// </summary>
+        private WriteableBitmap colorBitmap = null;
+
+        public PngBitmapEncoder encoder = new PngBitmapEncoder();
+
         public MainWindow()
         {
             // one sensor is currently supported
@@ -162,12 +172,23 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // get the depth (display) extents
             FrameDescription frameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
 
+            // open the reader for the color frames
+            this.colorFrameReader = this.kinectSensor.ColorFrameSource.OpenReader();
+
             // get size of joint space
             this.displayWidth = frameDescription.Width;
             this.displayHeight = frameDescription.Height;
 
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
+            // wire handler for frame arrival
+            this.colorFrameReader.FrameArrived += this.Reader_ColorFrameArrived;
+
+            // create the colorFrameDescription from the ColorFrameSource using Bgra format
+            FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+
+            // create the bitmap to display
+            this.colorBitmap = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -244,7 +265,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // initialize the components (controls) of the window
             this.InitializeComponent();
             thread = new Thread(new ThreadStart(WorkThreadFunction));
-            ///thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
+            thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
             //thread3 = new Thread(new ParameterizedThreadStart (WorkThreadFunction3));
 
         }
@@ -443,9 +464,51 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                                 if (this.isFound)
                                 {
-                                    //code for hands up and picture taken
+                                    if (thread2.ThreadState == System.Threading.ThreadState.Unstarted)
+                                    {
+                                        /*
+                                        //code for hands up and picture taken
+                                        // wire handler for frame arrival
+                                        this.colorFrameReader.FrameArrived += this.Reader_ColorFrameArrived;
+                                        this.colorFrameReader.FrameArrived += this.Reader_ColorFrameArrived;
+                                        this.colorFrameReader.FrameArrived += this.Reader_ColorFrameArrived;
+
+                                        // create the colorFrameDescription from the ColorFrameSource using Bgra format
+                                        FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+
+                                        // create the bitmap to display
+                                        this.colorBitmap = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
+                                        */
+                                        if (this.colorBitmap != null)
+                                        {
+                                            // create frame from the writable bitmap and add to encoder
+                                            encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap.Clone()));
+                                            string time = System.DateTime.Now.ToString("hh'-'mm'-'ss", CultureInfo.CurrentUICulture.DateTimeFormat);
+
+                                            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+
+                                            string path = Path.Combine(myPhotos, "KinectScreenshot-Color-" + time + ".png");
+
+                                            // write the new file to disk
+                                            try
+                                            {
+                                                // FileStream is IDisposable
+                                                using (FileStream fs = new FileStream(path, FileMode.Create))
+                                                {
+                                                    encoder.Save(fs);
+                                                }
+
+                                                this.StatusText = string.Format(Properties.Resources.SavedScreenshotStatusTextFormat, path);
+                                            }
+                                            catch (IOException)
+                                            {
+                                                this.StatusText = string.Format(Properties.Resources.FailedScreenshotStatusTextFormat, path);
+                                            }
+                                        }
+                                            thread2.Start();
+                                    }
                                     
-                                    
+
                                 }
                             }
 
@@ -461,7 +524,42 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Handles the color frame data arriving from the sensor
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+        private void Reader_ColorFrameArrived(object sender, ColorFrameArrivedEventArgs e)
+        {
+            // ColorFrame is IDisposable
+            using (ColorFrame colorFrame = e.FrameReference.AcquireFrame())
+            {
+                if (colorFrame != null)
+                {
+                    FrameDescription colorFrameDescription = colorFrame.FrameDescription;
+
+                    using (KinectBuffer colorBuffer = colorFrame.LockRawImageBuffer())
+                    {
+                        this.colorBitmap.Lock();
+
+                        // verify data and write the new color frame data to the display bitmap
+                        if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
+                        {
+                            colorFrame.CopyConvertedFrameDataToIntPtr(
+                                this.colorBitmap.BackBuffer,
+                                (uint)(colorFrameDescription.Width * colorFrameDescription.Height * 4),
+                                ColorImageFormat.Bgra);
+
+                            this.colorBitmap.AddDirtyRect(new Int32Rect(0, 0, this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight));
+                        }
+
+                        this.colorBitmap.Unlock();
+                    }
+                }
+            }
+        }
+
         public void WorkThreadFunction()
         {
             try
@@ -491,6 +589,19 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 // log errors
             }
         }
+
+        public void WorkThreadFunction2()
+        {
+            try
+            {
+               
+            }
+            catch (Exception ex)
+            {
+                // log errors
+            }
+        }
+
         /// <summary>
         /// Draws a body
         /// </summary>
