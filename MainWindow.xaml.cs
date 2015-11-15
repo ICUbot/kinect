@@ -431,7 +431,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     if (Math.Abs(x) <= 0.3 && Math.Abs(z) <= 1)
                                     {
                                         this.isFound = true;
-                                        if (thread3.ThreadState == System.Threading.ThreadState.Unstarted)
+                                        if (thread3.ThreadState != System.Threading.ThreadState.Unstarted)
                                         {
                                             thread3.Start();
                                         }
@@ -656,6 +656,25 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             {
                 System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\sounds\meatbag.wav");
                 player.Play();
+                string url = "http://robok0p.azurewebsites.net/captured";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    Console.WriteLine("\r\nResponse Status Code is OK and StatusDescription is: {0}",
+                       response.StatusDescription);
+                }
+                else
+                {
+                    Console.WriteLine("\r\nResponse Status Code is NOT OK and StatusDescription is: {0}",
+                       response.StatusDescription);
+                }
+                // Releases the resources of the response.
+
+                Stream resStream = response.GetResponseStream();
+                response.Close();
+                this.isFound = false;
             }
             catch (Exception ex)
             {
