@@ -140,6 +140,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         public Thread thread;
         public Thread thread2;
         public Thread thread3;
+        public Thread thread4;
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -270,6 +271,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             thread = new Thread(new ThreadStart(WorkThreadFunction));
             thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
             thread3 = new Thread(new ThreadStart (WorkThreadFunction3));
+            thread4 = new Thread(new ThreadStart(WorkThreadFunction4));
 
         }
 
@@ -431,9 +433,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     if (Math.Abs(x) <= 0.3 && Math.Abs(z) <= 1)
                                     {
                                         this.isFound = true;
-                                        if (thread3.ThreadState != System.Threading.ThreadState.Unstarted)
+                                        if (thread3.ThreadState == System.Threading.ThreadState.Unstarted)
                                         {
                                             thread3.Start();
+                                        }
+                                        if (thread4.ThreadState == System.Threading.ThreadState.Unstarted)
+                                        {
+                                            thread4.Start();
                                         }
                                     }
                                     else
@@ -635,7 +641,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 dataStream.Close();
                 response.Close();
                 */
-
                 /*
                 var client = new RestClient(url);
                 var request = new RestRequest("upload", Method.POST);
@@ -656,6 +661,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             {
                 System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\sounds\meatbag.wav");
                 player.Play();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public void WorkThreadFunction4 ()
+        {
+            try
+            {
                 string url = "http://robok0p.azurewebsites.net/captured";
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
@@ -676,12 +692,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 response.Close();
                 this.isFound = false;
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
 
             }
         }
-
         /// <summary>
         /// Draws a body
         /// </summary>
