@@ -139,7 +139,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public Thread thread;
         public Thread thread2;
-        //public Thread thread3;
+        public Thread thread3;
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -269,7 +269,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.InitializeComponent();
             thread = new Thread(new ThreadStart(WorkThreadFunction));
             thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
-            //thread3 = new Thread(new ParameterizedThreadStart (WorkThreadFunction3));
+            thread3 = new Thread(new ThreadStart (WorkThreadFunction3));
 
         }
 
@@ -431,6 +431,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     if (Math.Abs(x) <= 0.3 && Math.Abs(z) <= 1)
                                     {
                                         this.isFound = true;
+                                        if (thread3.ThreadState == System.Threading.ThreadState.Unstarted)
+                                        {
+                                            thread3.Start();
+                                        }
                                     }
                                     else
                                     {
@@ -644,6 +648,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             catch (Exception ex)
             {
                 // log errors
+            }
+        }
+        public void WorkThreadFunction3()
+        {
+            try
+            {
+                System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\sounds\meatbag.wav");
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
