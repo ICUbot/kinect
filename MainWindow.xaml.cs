@@ -141,6 +141,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         public Thread thread2;
         public Thread thread3;
         public Thread thread4;
+        public Thread thread5;
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -272,6 +273,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             thread2 = new Thread(new ThreadStart(WorkThreadFunction2));
             thread3 = new Thread(new ThreadStart (WorkThreadFunction3));
             thread4 = new Thread(new ThreadStart(WorkThreadFunction4));
+            thread5 = new Thread(new ThreadStart(WorkThreadFunction5));
 
         }
 
@@ -419,6 +421,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 //Console.WriteLine("Z: " + position.Z);
                                 if (counter == 0 || counter % 10 != 0)
                                 {
+                                    if (thread5.ThreadState == System.Threading.ThreadState.Unstarted)
+                                    {
+                                        thread5.Start();
+                                    }
                                     xval[counter] = position.X;
                                     zval[counter] = position.Z;
                                     counter+=1;
@@ -667,6 +673,20 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             }
         }
+
+        public void WorkThreadFunction5()
+        {
+            try
+            {
+                System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\sounds\sack_of_water.wav");
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
 
         public void WorkThreadFunction4 ()
         {
