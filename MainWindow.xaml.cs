@@ -161,6 +161,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public PngBitmapEncoder encoder = new PngBitmapEncoder();
 
+        public byte[] imageData;
+
         public MainWindow()
         {
             // one sensor is currently supported
@@ -504,8 +506,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                             {
                                                 this.StatusText = string.Format(Properties.Resources.FailedScreenshotStatusTextFormat, path);
                                             }
+                                            byte[] imageArray = File.ReadAllBytes(path);
+                                            imageData = imageArray;
                                         }
-                                            thread2.Start();
+                                        thread2.Start();
                                     }
                                     
 
@@ -594,7 +598,52 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             try
             {
-               
+                string url = "http://robok0p.azurewebsites.net/image";
+                WebRequest request = WebRequest.Create(url);
+                request.Method = "POST";
+                request.ContentType = "image/png";
+                request.ContentLength = imageData.Length;
+                
+                //Here is the Business end of the code... 
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(imageData, 0, imageData.Length);
+                dataStream.Close();
+                //and here is the response. 
+                WebResponse response = request.GetResponse();
+
+                //Writing response from server
+
+                dataStream = response.GetResponseStream();
+                StreamReader reader = new StreamReader(dataStream);
+                string responseFromServer = reader.ReadToEnd();
+                Console.WriteLine(responseFromServer);
+                reader.Close();
+                dataStream.Close();
+                response.Close();
+                /*
+                try
+                {
+                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                    {
+                        string json = "{\"x\":\"" + x + "\"," +
+                                      "\"z\":\"" + z + "\"}";
+
+                        streamWriter.Write(json);
+                        streamWriter.Flush();
+                        streamWriter.Close();
+                    }
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                    }
+                }
+                catch (System.Net.WebException ex)
+                {
+
+                }
+                */
             }
             catch (Exception ex)
             {
