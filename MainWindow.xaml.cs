@@ -20,6 +20,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Drawing;
     using System.Threading;
     using System.Windows.Threading;
+    using RestSharp;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -437,7 +438,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                                     httpWebRequest.ContentType = "text/json";
                                     httpWebRequest.Method = "POST";
-                                    /*
                                     try
                                     {
                                         using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
@@ -460,7 +460,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     {
 
                                     }
-                                    */
                                 }
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
@@ -599,7 +598,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             try
             {
                 string url = "http://robok0p.azurewebsites.net/image";
-                WebRequest request = WebRequest.Create(url);
+                /*WebRequest request = WebRequest.Create(url);
                 request.Method = "POST";
                 request.ContentType = "image/png";
                 request.ContentLength = imageData.Length;
@@ -620,30 +619,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 reader.Close();
                 dataStream.Close();
                 response.Close();
-                /*
-                try
-                {
-                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                    {
-                        string json = "{\"x\":\"" + x + "\"," +
-                                      "\"z\":\"" + z + "\"}";
-
-                        streamWriter.Write(json);
-                        streamWriter.Flush();
-                        streamWriter.Close();
-                    }
-
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        var result = streamReader.ReadToEnd();
-                    }
-                }
-                catch (System.Net.WebException ex)
-                {
-
-                }
                 */
+                var client = new RestClient(url);
+                var request = new RestRequest("upload", Method.POST);
+                request.AddFile("file", imageData, "image.png", "image/png");
+                RestResponse response = (RestResponse)client.Execute(request);
+                var content = response.Content;
+                Console.WriteLine(content);
             }
             catch (Exception ex)
             {
