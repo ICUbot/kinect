@@ -196,8 +196,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
 
-            this.xval = new float[5];
-            this.zval = new float[5];
+            this.xval = new float[10];
+            this.zval = new float[10];
             // Torso
             /*
             this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
@@ -415,7 +415,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 //Console.WriteLine("Y: " + position.Y);
                                 //gather 
                                 //Console.WriteLine("Z: " + position.Z);
-                                if (counter % 5 != 0)
+                                if (counter == 0 || counter % 10 != 0)
                                 {
                                     xval[counter] = position.X;
                                     zval[counter] = position.Z;
@@ -424,9 +424,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 else
                                 {
                                     counter = 0;
-                                    float x = (xval.Sum())/5;
-                                    float z = (zval.Sum())/5;
-                                    if (Math.Abs(x) <= 0.3 && Math.Abs(z) <= 0.75)
+                                    //float x = (xval.Sum())/xval.Length;
+                                    //float z = (zval.Sum())/zval.Length;
+                                    float x = getMedian(xval);
+                                    float z = getMedian(zval);
+                                    if (Math.Abs(x) <= 0.3 && Math.Abs(z) <= 1)
                                     {
                                         this.isFound = true;
                                     }
@@ -434,12 +436,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     {
                                         this.isFound = false;
                                     }
-                                    string url = "http://192.168.1.15/move";
-                                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                                    httpWebRequest.ContentType = "text/json";
-                                    httpWebRequest.Method = "POST";
+                                    string url = "http://192.168.1.101/move";
                                     try
                                     {
+                                        /*
+                                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                                    httpWebRequest.ContentType = "application/json";
+                                    httpWebRequest.Method = "POST";
+                                    
                                         using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                                         {
                                             string json = "{\"x\":\"" + x + "\"," +
@@ -455,10 +459,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                         {
                                             var result = streamReader.ReadToEnd();
                                         }
+                                        */
+                                        var client = new RestClient("http://192.168.1.101/move");
+                                        var request = new RestRequest(Method.POST);
+                                        request.AddHeader("content-type", "application/json");
+                                        request.AddParameter("application/json", "{\n\"x\":\"" + x + "\",\n\"z\":\"" + z + "\"\n}", ParameterType.RequestBody);
+                                        IRestResponse response = client.Execute(request);
                                     }
-                                    catch (System.Net.WebException ex)
-                                    {
 
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine("Error making post request to python server");
                                     }
                                 }
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
@@ -620,12 +631,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 dataStream.Close();
                 response.Close();
                 */
+
+                /*
                 var client = new RestClient(url);
                 var request = new RestRequest("upload", Method.POST);
                 request.AddFile("file", imageData, "image.png", "image/png");
                 RestResponse response = (RestResponse)client.Execute(request);
                 var content = response.Content;
                 Console.WriteLine(content);
+                */
             }
             catch (Exception ex)
             {
@@ -778,6 +792,33 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // on failure, set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
+        }
+        public static float getMedian(float[] Value)
+        {
+            /*
+            decimal Median = 0;
+            int size = Value.Length;
+            int mid = size / 2;
+            Median = (size % 2 != 0) ? (decimal)Value[mid] : ((decimal)Value[mid] + (decimal)Value[mid + 1]) / 2;
+            return (float)Math.Round(Median);
+            */
+            Value = Value.OrderBy(i => i).ToArray();
+            // or Array.Sort(myArr) for in-place sort
+
+            int mid = Value.Length / 2;
+            double median = 0;
+
+            if (Value.Length % 2 == 0)
+            {
+                //we know its even
+                median = (Value[mid] + Value[mid - 1]) / 2;
+            }
+            else
+            {
+                //we know its odd
+                median = Value[mid];
+            }
+            return (float)median;
         }
 
     }

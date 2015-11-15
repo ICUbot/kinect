@@ -27,3 +27,5 @@ C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-
 C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.g.resources
 C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\Microsoft.Samples.Kinect.BodyBasics.Properties.Resources.resources
 C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\obj\Debug\BodyBasics-WPF.csproj.GenerateResource.Cache
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\RestSharp.dll
+C:\Users\Mustaqeem\Documents\Projects\HackPrinceton\kinect\bin\AnyCPU\Debug\RestSharp.xml
